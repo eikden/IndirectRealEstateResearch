@@ -1,0 +1,62 @@
+---
+title: "IndirectRealEstateResearch"
+author: "Yeoh Eik Den"
+date: "August 2, 2017"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#load readxl package for import excel file
+library(readxl)
+
+#read sheet and assign to variable
+housing_price_index <- read_excel("MalaysiaRealEstateIndexes.xlsx", sheet=1)
+properties_stock_index <- read_excel("MalaysiaRealEstateIndexes.xlsx", sheet=2)
+
+##housing price index is yearly data and properties stock index is monthly data. 
+##Thus, following section is to convert the properties stock index to yearly data.
+##This is to able for both data able to find the correlation.
+
+#convert to date
+properties_stock_index$Date <- as.Date(properties_stock_index$Date)
+
+#Get years
+properties_stock_index$Year <- format(properties_stock_index$Date, format="%Y")
+
+#aggregate on year and get mean. Then assign to variable
+propertiest_stock_index_by_year<-aggregate(`Property Stock Index` ~ Year, properties_stock_index, mean)
+
+
+
+
+```
+
+```{r}
+#correlation value for housing price index and properties stock index
+cor_hpi_psi<-cor(housing_price_index$`Housing Price Index`,propertiest_stock_index_by_year$`Property Stock Index`)
+
+#correlation output
+print(cor_hpi_psi)
+```
+```{r}
+#find the t-test value
+t_test<-t.test(housing_price_index$`Housing Price Index`,propertiest_stock_index_by_year$`Property Stock Index`, alternative="two.sided", conf.level = .95)
+
+#print t-test result
+print(t_test)
+```
+
+```{r}
+names(t_test)
+t_test_stat <- replicate(100, t_test$statistic)
+range(t_test_stat)
+
+p_test_stat <- seq(-20,20, length=100)
+plot(p_test_stat, dt(p_test_stat, df=4),xlab="t-test value",ylab="density", col='red', type='l')
+
+```
+
